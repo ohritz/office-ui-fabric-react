@@ -3,6 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as ReactTestUtils from 'react-addons-test-utils';
 /* tslint:enable:no-unused-variable */
+import { KeyCodes } from '../../Utilities';
 
 let { expect } = chai;
 
@@ -81,7 +82,7 @@ describe('Pickers', () => {
 
     });
 
-    it('can will not render input when items reach itemLimit', () => {
+    it('will not render input when items reach itemLimit', () => {
       let root = document.createElement('div');
       document.body.appendChild(root);
       let picker: TypedBasePicker = ReactDOM.render(
@@ -108,7 +109,41 @@ describe('Pickers', () => {
       ReactDOM.unmountComponentAtNode(root);
     });
 
-    it('will still render with itemLimit set to 0', () => {
+    it('will set focus to last selected item after itemLimit reached', () => {
+      let root = document.createElement('div');
+      let focusTarget;
+      document.body.appendChild(root);
+      let picker: TypedBasePicker = ReactDOM.render(
+        <BasePickerWithType
+          onFocus={ e => focusTarget = e.currentTarget }
+          onResolveSuggestions={ onResolveSuggestions }
+          onRenderItem={ (props: IPickerItemProps<{ key: string, name: string }>) => <div key={ props.item.name }>{ basicRenderer(props) }</div> }
+          onRenderSuggestionsItem={ basicSuggestionRenderer }
+          itemLimit={ 1 }
+        />,
+        root
+      ) as TypedBasePicker;
+      let input = document.querySelector('.ms-BasePicker-input') as HTMLInputElement;
+
+      input.focus();
+      input.value = 'bl';
+      ReactTestUtils.Simulate.change(input);
+
+      let suggestions = document.querySelector('.ms-Suggestions') as HTMLInputElement;
+      let suggestionOptions = document.querySelectorAll('.ms-Suggestions-itemButton');
+      ReactTestUtils.Simulate.click(suggestionOptions[0]);
+
+      let selectedItem = document.querySelectorAll('[data-selection-index]');
+      const focusItem = document.activeElement;
+      expect(picker.items.length).to.be.equal(2);
+      input = document.querySelector('.ms-BasePicker-input') as HTMLInputElement;
+
+      expect(input).to.be.null;
+
+      ReactDOM.unmountComponentAtNode(root);
+    });
+
+    it('will still render control with itemLimit set to 0', () => {
       let root = document.createElement('div');
       document.body.appendChild(root);
       let picker: TypedBasePicker = ReactDOM.render(
