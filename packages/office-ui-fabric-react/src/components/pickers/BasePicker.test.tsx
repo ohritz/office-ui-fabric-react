@@ -111,16 +111,40 @@ describe('Pickers', () => {
 
     it('will set focus to last selected item after itemLimit reached', () => {
       let root = document.createElement('div');
-      let focusTarget;
+
+      let lastFocusedElement: HTMLElement | undefined;
+
+      function mockFocusOnElem(element: HTMLElement | null) {
+        if (element) {
+          element.focus = () => ReactTestUtils.Simulate.focus(element);
+        }
+        return element;
+      }
+
+      const RenderedWithFocusSpy = (props: IPickerItemProps<{ key: string, name: string }>) => {
+        let ref;
+        return (<div ref={ el => ref = mockFocusOnElem(el) }> { props.item.name } </div>);
+      };
+
+      function _onFocus(ev: any) {
+        lastFocusedElement = ev.target;
+      }
+
+
       document.body.appendChild(root);
       let picker: TypedBasePicker = ReactDOM.render(
-        <BasePickerWithType
-          onFocus={ e => focusTarget = e.currentTarget }
-          onResolveSuggestions={ onResolveSuggestions }
-          onRenderItem={ (props: IPickerItemProps<{ key: string, name: string }>) => <div key={ props.item.name }>{ basicRenderer(props) }</div> }
-          onRenderSuggestionsItem={ basicSuggestionRenderer }
-          itemLimit={ 1 }
-        />,
+        <div { ...{ onFocusCapture: _onFocus } }>
+          <BasePickerWithType
+            onResolveSuggestions={ onResolveSuggestions }
+            onRenderItem={ (props: IPickerItemProps<{ key: string, name: string }>) => {
+              console.log('FOCUSZONE', this.focusZone);
+              return (<div key={ props.item.name }>{ RenderedWithFocusSpy(props) }</div>)
+            }
+            }
+            onRenderSuggestionsItem={ basicSuggestionRenderer }
+            itemLimit={ 1 }
+          />
+        </div>,
         root
       ) as TypedBasePicker;
       let input = document.querySelector('.ms-BasePicker-input') as HTMLInputElement;
