@@ -108,7 +108,7 @@ describe('Pickers', () => {
       ReactDOM.unmountComponentAtNode(root);
     });
 
-    it('will set focus to last selected item after itemLimit reached', () => {
+    it.only('will set focus to last selected item after itemLimit reached', () => {
       let lastFocusedElement: HTMLElement | undefined;
       let pickerItemsAdded: HTMLElement[] = [];
 
@@ -120,26 +120,30 @@ describe('Pickers', () => {
         return element;
       }
 
-      // const RenderedWithFocusSpy = (props: IPickerItemProps<{ key: string, name: string }>) => {
-      //   return (<div ref={ el => mockFocusOnElem(el) }> { props.item.name } </div>);
-      // };
+      const RenderedWithFocusSpy = (props: IPickerItemProps<{ key: string, name: string }>) => {
+        return (<div ref={ el => mockFocusOnElem(el) }> { props.item.name } </div>);
+      };
 
       function _onFocus(ev: any) {
-        lastFocusedElement = ev.currentTarget;
+        lastFocusedElement = ev.target;
       }
 
+      let root = document.createElement('div');
+      document.body.appendChild(root);
 
-      let component = ReactTestUtils.renderIntoDocument((
-        <div { ...{ onFocusCapture: _onFocus } }>
+      let component = ReactDOM.render((
+        <div onFocusCapture={ _onFocus }>
           <BasePickerWithType
             onResolveSuggestions={ onResolveSuggestions }
-            onRenderItem={ (props: IPickerItemProps<{ key: string, name: string }>) => {
-              return (<div key={ props.item.name } ref={ el => mockFocusOnElem(el) }>{ basicRenderer(props) }</div>);
-            } }
+            onRenderItem={ (props: IPickerItemProps<{ key: string, name: string }>) => (<div key={ props.item.name } >{ RenderedWithFocusSpy(props) }</div>)
+            }
             onRenderSuggestionsItem={ basicSuggestionRenderer }
             itemLimit={ 1 } />
         </div>
-      ));
+      ), root);
+
+      debugger;
+
       let picker = ReactDOM.findDOMNode(component as React.ReactInstance).firstChild as Element;
       let input = picker.querySelector('.ms-BasePicker-input') as HTMLInputElement;
 
@@ -149,8 +153,7 @@ describe('Pickers', () => {
       let suggestions = picker.querySelector('.ms-Suggestions') as HTMLInputElement;
       let suggestionOptions = picker.querySelectorAll('.ms-Suggestions-itemButton');
       ReactTestUtils.Simulate.click(suggestionOptions[0]);
-      input = picker.querySelector('.ms-BasePicker-input') as HTMLInputElement;
-      debugger;
+
       console.log('input', input);
       console.log('items:', pickerItemsAdded);
       console.log('lastElem: ', lastFocusedElement);
